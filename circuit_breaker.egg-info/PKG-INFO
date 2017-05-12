@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: circuit-breaker
+Version: 0.1
+Summary: Timeout decorator for functions with backup
+Home-page: https://github.com/zacernst/circuit_breaker
+Author: Zachary Ernst
+Author-email: zac.ernst@gmail.com
+License: UNKNOWN
+Description: Allows you to decorate a function, provide a timeout and a backup function if it is not complete within the timeout specified.
+Platform: UNKNOWN
