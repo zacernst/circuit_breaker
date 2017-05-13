@@ -5,7 +5,7 @@ import os
 
 setup(
     name='circuit_breaker',
-    version='0.1',
+    version='0.1.1',
     description='Timeout decorator for functions with backup',
     long_description=('Allows you to decorate a function, provide '
                       'a timeout and a backup function if it is '

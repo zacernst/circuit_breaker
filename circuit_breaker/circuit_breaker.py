@@ -4,7 +4,6 @@ is exceeded, then a different function is called and its value
 is returned.
 """
 
-from functools import wraps
 import time
 import threading
 import random
@@ -13,7 +12,7 @@ import random
 def circuit_breaker(timeout=None, timeout_function=None):
     """
     Decorator to enable a timeout on a function. If the decorated
-    functiond does not complete in less than ``timeout`` seconds,
+    function does not complete in less than ``timeout`` seconds,
     then execute the function called ``timeout_function``, passing
     the original arguments to it.
 
@@ -26,16 +25,32 @@ def circuit_breaker(timeout=None, timeout_function=None):
 
     def decorator(func):
         
-        def new_func(*args, **kwargs):
-            result = func(*args, **kwargs)
-            kwargs['_thread_result'][0] = result
+        def new_func(f, *args, **kwargs):
+            """
+            Threads cannot return any values. So we pass a mutable
+            object (a list containing a ``None`` object) through
+            the ``**kwargs`` and store the result of the function in
+            there so that it can be retrieved outside the thread.
+            But we do **not** want to pass a keyword argument to
+            the function which the function isn't expecting. So we
+            create a new reference to the mutable object
+            (``_thread_result``), delete the corresponding key
+            from the dictionary, and then re-insert it after the
+            function has been called.
+            """
+
+            _thread_result = kwargs['_thread_result']
+            del kwargs['_thread_result']
+            result = f(*args, **kwargs)
+            _thread_result[0] = result
+            kwargs['_thread_result'] = _thread_result
 
         def wrapper(*args, **kwargs):
             thread_result = [None]
             kwargs['_thread_result'] = thread_result
             function_thread = threading.Thread(
                 target=new_func,
-                args=args,
+                args=(func,) + args,
                 kwargs=kwargs)
             function_thread.setDaemon(True)
             start_time = time.time()
@@ -45,6 +60,15 @@ def circuit_breaker(timeout=None, timeout_function=None):
                 pass
             deadline_exceeded = function_thread.isAlive()
             if deadline_exceeded:
+                """
+                The timeout has finished, but the thread is still alive,
+                indicating that the function hasn't completed quickly
+                enough. So call the backup.
+
+                We don't use threads for this call, so we'll get rid of
+                the ``_thread_result`` key in the ``**kwargs``.
+                """
+                del kwargs['_thread_result']
                 return timeout_function(*args, **kwargs)
             return thread_result[0]
         return wrapper
@@ -56,12 +80,12 @@ if __name__ == '__main__':
     execute ``backup_function`` instead.
     """
 
-    def backup_function(x, **kwargs):
+    def backup_function(x):
         return 'I am in the backup function'
 
 
     @circuit_breaker(timeout=1, timeout_function=backup_function)
-    def foo(x, **kwargs):
+    def foo(x):
         time.sleep(2 * random.random())
         return 'the function finished in time: ' + str(x+1)
 

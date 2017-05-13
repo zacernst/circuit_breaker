@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Circuit Breaker 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="None" href="index.html#document-index" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-circuit-breaker">
+<h1>Welcome to Circuit Breaker<a class="headerlink" href="#welcome-to-circuit-breaker" title="Permalink to this headline">¶</a></h1>
+<p>The circuit breaker package contains a decorator that you can apply to
+your Python function, which will prevent it from running longer than
+a specified timeout. If the timeout is reached, a &#8220;backup function&#8221; is
+run immediately and its value is returned.</p>
+<p>I wrote this decorator in order to guarantee that a microservice never
+takes too long to return a result, avoiding degradation of downstream
+services.</p>
+<p>To install it, just use <code class="docutils literal"><span class="pre">pip</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="n">pip</span> <span class="n">install</span> <span class="n">circuit_breaker</span>
+</pre></div>
+</div>
+<p>To use it, decorate your function in the normal way, providing two
+keyword arguments: <code class="docutils literal"><span class="pre">timeout</span></code> and <code class="docutils literal"><span class="pre">timeout_function</span></code>. Here is an
+example of a function that takes longer than one second to run half
+of the times it&#8217;s called. When one second has elapsed, a backup function
+is called immediately.</p>
+<div class="highlight-default"><div class="highlight"><pre><span class="k">def</span> <span class="nf">backup_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39;I am in the backup function&#39;</span>
+
+
+<span class="nd">@circuit_breaker</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">timeout_function</span><span class="o">=</span><span class="n">backup_function</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">slow_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">())</span>
+    <span class="k">return</span> <span class="s">&#39;the function finished in time: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A potential &#8220;gotcha&#8221; when using this decorator is that because
+decorators are always applied at compile time, the function
+you use as your <code class="docutils literal"><span class="pre">backup_function</span></code> must be defined <strong>before</strong>
+the decorated function. In other words, if we were to move
+the <code class="docutils literal"><span class="pre">backup_function</span></code> in the example to a position after
+<code class="docutils literal"><span class="pre">slow_function</span></code>, we&#8217;d get a compile-time error, which would
+make us sad.</p>
+<p>Contact <a class="reference external" href="mailto:zac&#46;ernst&#37;&#52;&#48;gmail&#46;com">zac<span>&#46;</span>ernst<span>&#64;</span>gmail<span>&#46;</span>com</a> with questions/comments/concerns/threats.</p>
+<p><a class="reference external" href="http://github.com/zacernst/circuit_breaker">http://github.com/zacernst/circuit_breaker</a></p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html#document-index">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Zachary Ernst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
